@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Control</title>
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+<style>
+:root {
+  --bg: #f5f6f8;
+  --card: #ffffff;
+  --text: #1c1c1e;
+  --muted: #9a9aa0;
+  --neutral: #e6e7eb;
+  --ok: rgba(0,122,255,0.35);
+  --warn: rgba(0,122,255,0.7);
+  --limit: #000000;
+  font-family: -apple-system, system-ui;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+header {
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  font-weight: 600;
+}
+
+nav button {
+  border: none;
+  background: none;
+  color: var(--muted);
+  margin-left: 8px;
+}
+
+nav button.active {
+  color: var(--text);
+}
+
+main {
+  padding: 12px;
+}
+
+.habit {
+  margin-bottom: 20px;
+}
+
+.title {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7,1fr);
+  gap: 4px;
+}
+
+.cell {
+  aspect-ratio: 1;
+  border-radius: 5px;
+  background: var(--neutral);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cell.ok { background: var(--ok); }
+.cell.warn { background: var(--warn); }
+.cell.limit { background: var(--limit); color:#fff; }
+
+.toolbar {
+  position: fixed;
+  bottom: env(safe-area-inset-bottom);
+  left: 0;
+  right: 0;
+  padding: 10px;
+  background: var(--card);
+  border-top: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+}
+
+button.primary {
+  flex: 1;
+  margin: 0 4px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  background: #007aff;
+  color: white;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  Control
+  <nav>
+    <button class="active">M</button>
+  </nav>
+</header>
+
+<main id="app"></main>
+
+<div class="toolbar">
+  <button class="primary" onclick="addHabit()">Nuevo hábito</button>
+</div>
+
+<script>
+/* ========= DATA ========= */
+const KEY = "control-v1";
+let data = JSON.parse(localStorage.getItem(KEY)) || { habits: [] };
+const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+
+/* ========= HABITS ========= */
+function addHabit() {
+  const name = prompt("Hábito");
+  if (!name) return;
+
+  const type = prompt("+ aumentar / - reducir", "+");
+  const habit = {
+    id: Date.now(),
+    name,
+    type,
+    records: {}
+  };
+  data.habits.push(habit);
+  save();
+  render();
+}
+
+function log(h) {
+  const d = new Date().toISOString().slice(0,10);
+  h.records[d] = (h.records[d] || 0) + 1;
+  save();
+  render();
+}
+
+/* ========= GRID ========= */
+function renderGrid(h) {
+  const today = new Date();
+  let html = "";
+
+  for (let i=27;i>=0;i--) {
+    const d = new Date();
+    d.setDate(today.getDate()-i);
+    const key = d.toISOString().slice(0,10);
+    const v = h.records[key] || 0;
+
+    let cls = "cell";
+    if (v === 0) cls += "";
+    else if (v === 1) cls += " ok";
+    else if (v <= 3) cls += " warn";
+    else cls += " limit";
+
+    html += `<div class="${cls}">${v||""}</div>`;
+  }
+  return `<div class="grid">${html}</div>`;
+}
+
+/* ========= RENDER ========= */
+function render() {
+  const app = document.getElementById("app");
+  app.innerHTML = "";
+
+  data.habits.forEach(h => {
+    const div = document.createElement("div");
+    div.className = "habit";
+    div.innerHTML = `
+      <div class="title">
+        <span>${h.name}</span>
+        <button onclick="log(data.habits.find(x=>x.id===${h.id}))">+</button>
+      </div>
+      ${renderGrid(h)}
+    `;
+    app.appendChild(div);
+  });
+}
+
+render();
+
+/* ========= SW ========= */
+if ("serviceWorker" in navigator) {
+  const code = `
+    self.addEventListener('fetch',e=>{
+      e.respondWith(
+        caches.open('c').then(c=>c.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+          c.put(e.request,res.clone());
+          return res;
+        })))
+      );
+    });
+  `;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([code],{type:"text/js"})));
+}
+</script>
+
+</body>
+</html>
