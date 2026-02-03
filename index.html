@@ -3,187 +3,205 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Control</title>
+<title>Habits</title>
 
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 
 <style>
 :root {
-  --bg: #f5f6f8;
-  --card: #ffffff;
-  --text: #1c1c1e;
-  --muted: #9a9aa0;
-  --neutral: #e6e7eb;
-  --ok: rgba(0,122,255,0.35);
-  --warn: rgba(0,122,255,0.7);
-  --limit: #000000;
-  font-family: -apple-system, system-ui;
+  --bg:#f6f7f9;
+  --card:#fff;
+  --text:#1c1c1e;
+  --muted:#8e8e93;
+  --neutral:#e5e5ea;
+  --low:#cfe8ff;
+  --mid:#7abfff;
+  --high:#007aff;
+  font-family:-apple-system,system-ui;
 }
 
 body {
-  margin: 0;
-  background: var(--bg);
-  color: var(--text);
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
 }
 
 header {
-  padding: 12px 16px;
-  display: flex;
-  justify-content: space-between;
-  font-weight: 600;
-}
-
-nav button {
-  border: none;
-  background: none;
-  color: var(--muted);
-  margin-left: 8px;
-}
-
-nav button.active {
-  color: var(--text);
+  padding:12px 16px;
+  font-weight:600;
 }
 
 main {
-  padding: 12px;
+  padding:12px;
 }
 
 .habit {
-  margin-bottom: 20px;
+  margin-bottom:24px;
 }
 
-.title {
-  display: flex;
-  justify-content: space-between;
-  font-size: 13px;
-  margin-bottom: 6px;
+.habit-title {
+  display:flex;
+  justify-content:space-between;
+  font-size:14px;
+  margin-bottom:6px;
 }
 
 .grid {
-  display: grid;
-  grid-template-columns: repeat(7,1fr);
-  gap: 4px;
+  display:grid;
+  grid-template-columns:repeat(7,1fr);
+  gap:4px;
 }
 
 .cell {
-  aspect-ratio: 1;
-  border-radius: 5px;
-  background: var(--neutral);
-  font-size: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  aspect-ratio:1;
+  border-radius:6px;
+  background:var(--neutral);
+  font-size:11px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
 }
 
-.cell.ok { background: var(--ok); }
-.cell.warn { background: var(--warn); }
-.cell.limit { background: var(--limit); color:#fff; }
+.cell.low { background:var(--low); }
+.cell.mid { background:var(--mid); }
+.cell.high { background:var(--high); color:#fff; }
 
 .toolbar {
-  position: fixed;
-  bottom: env(safe-area-inset-bottom);
-  left: 0;
-  right: 0;
-  padding: 10px;
-  background: var(--card);
-  border-top: 1px solid #ddd;
-  display: flex;
-  justify-content: space-between;
+  position:fixed;
+  bottom:env(safe-area-inset-bottom);
+  left:0;
+  right:0;
+  background:var(--card);
+  padding:10px;
+  border-top:1px solid #ddd;
 }
 
-button.primary {
-  flex: 1;
-  margin: 0 4px;
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  background: #007aff;
-  color: white;
+.toolbar button {
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  background:#007aff;
+  color:white;
+  font-size:15px;
+}
+
+.modal {
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.3);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.modal-content {
+  background:white;
+  border-radius:12px;
+  padding:16px;
+  width:85%;
+}
+
+.modal-content h3 {
+  margin-top:0;
+  font-size:16px;
+}
+
+.modal-content button {
+  width:100%;
+  margin-top:8px;
+  padding:10px;
+  border-radius:8px;
+  border:none;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  Control
-  <nav>
-    <button class="active">M</button>
-  </nav>
-</header>
-
+<header>Habits</header>
 <main id="app"></main>
 
 <div class="toolbar">
-  <button class="primary" onclick="addHabit()">Nuevo hábito</button>
+  <button onclick="addHabit()">Nuevo hábito</button>
 </div>
 
 <script>
-/* ========= DATA ========= */
-const KEY = "control-v1";
-let data = JSON.parse(localStorage.getItem(KEY)) || { habits: [] };
-const save = () => localStorage.setItem(KEY, JSON.stringify(data));
+/* ===== DATA ===== */
+const KEY="habits-v3";
+let data=JSON.parse(localStorage.getItem(KEY))||{habits:[]};
+const save=()=>localStorage.setItem(KEY,JSON.stringify(data));
 
-/* ========= HABITS ========= */
-function addHabit() {
-  const name = prompt("Hábito");
-  if (!name) return;
-
-  const type = prompt("+ aumentar / - reducir", "+");
-  const habit = {
-    id: Date.now(),
-    name,
-    type,
-    records: {}
-  };
-  data.habits.push(habit);
-  save();
-  render();
+/* ===== HABITS ===== */
+function addHabit(){
+  const name=prompt("Nombre del hábito");
+  if(!name)return;
+  data.habits.push({id:Date.now(),name,records:{}});
+  save();render();
 }
 
-function log(h) {
-  const d = new Date().toISOString().slice(0,10);
-  h.records[d] = (h.records[d] || 0) + 1;
-  save();
-  render();
+/* ===== MODAL ===== */
+function openEditor(habit,date){
+  const current=habit.records[date]||0;
+  const modal=document.createElement("div");
+  modal.className="modal";
+  modal.innerHTML=`
+    <div class="modal-content">
+      <h3>${habit.name}<br><small>${date}</small></h3>
+      <button onclick="setValue(${habit.id},'${date}',${current+1})">+1</button>
+      <button onclick="setValue(${habit.id},'${date}',${Math.max(current-1,0)})">-1</button>
+      <button onclick="manualEdit(${habit.id},'${date}',${current})">Editar</button>
+      <button onclick="setValue(${habit.id},'${date}',0)">Borrar</button>
+      <button onclick="closeModal()">Cerrar</button>
+    </div>`;
+  document.body.appendChild(modal);
 }
 
-/* ========= GRID ========= */
-function renderGrid(h) {
-  const today = new Date();
-  let html = "";
+function closeModal(){
+  document.querySelector(".modal")?.remove();
+}
 
-  for (let i=27;i>=0;i--) {
-    const d = new Date();
+function setValue(id,date,val){
+  const h=data.habits.find(x=>x.id===id);
+  if(val===0) delete h.records[date];
+  else h.records[date]=val;
+  save();closeModal();render();
+}
+
+function manualEdit(id,date,current){
+  const v=parseInt(prompt("Valor",current),10);
+  if(isNaN(v))return;
+  setValue(id,date,v);
+}
+
+/* ===== GRID ===== */
+function renderGrid(h){
+  const today=new Date();
+  let html="";
+  for(let i=27;i>=0;i--){
+    const d=new Date();
     d.setDate(today.getDate()-i);
-    const key = d.toISOString().slice(0,10);
-    const v = h.records[key] || 0;
-
-    let cls = "cell";
-    if (v === 0) cls += "";
-    else if (v === 1) cls += " ok";
-    else if (v <= 3) cls += " warn";
-    else cls += " limit";
-
-    html += `<div class="${cls}">${v||""}</div>`;
+    const key=d.toISOString().slice(0,10);
+    const v=h.records[key]||0;
+    let cls="cell";
+    if(v===1)cls+=" low";
+    else if(v<=3&&v>1)cls+=" mid";
+    else if(v>3)cls+=" high";
+    html+=`<div class="${cls}" onclick="openEditor(h,'${key}')">${v||""}</div>`;
   }
   return `<div class="grid">${html}</div>`;
 }
 
-/* ========= RENDER ========= */
-function render() {
-  const app = document.getElementById("app");
-  app.innerHTML = "";
-
-  data.habits.forEach(h => {
-    const div = document.createElement("div");
-    div.className = "habit";
-    div.innerHTML = `
-      <div class="title">
-        <span>${h.name}</span>
-        <button onclick="log(data.habits.find(x=>x.id===${h.id}))">+</button>
-      </div>
+/* ===== RENDER ===== */
+function render(){
+  const app=document.getElementById("app");
+  app.innerHTML="";
+  data.habits.forEach(h=>{
+    const div=document.createElement("div");
+    div.className="habit";
+    div.innerHTML=`
+      <div class="habit-title">${h.name}</div>
       ${renderGrid(h)}
     `;
     app.appendChild(div);
@@ -192,19 +210,10 @@ function render() {
 
 render();
 
-/* ========= SW ========= */
-if ("serviceWorker" in navigator) {
-  const code = `
-    self.addEventListener('fetch',e=>{
-      e.respondWith(
-        caches.open('c').then(c=>c.match(e.request).then(r=>r||fetch(e.request).then(res=>{
-          c.put(e.request,res.clone());
-          return res;
-        })))
-      );
-    });
-  `;
-  navigator.serviceWorker.register(URL.createObjectURL(new Blob([code],{type:"text/js"})));
+/* ===== SW ===== */
+if("serviceWorker"in navigator){
+  const sw=`self.addEventListener('fetch',e=>{e.respondWith(caches.open('h').then(c=>c.match(e.request).then(r=>r||fetch(e.request).then(res=>{c.put(e.request,res.clone());return res;}))))});`;
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:"text/js"})));
 }
 </script>
 
